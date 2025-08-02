@@ -28,6 +28,7 @@ function gameLoop() {
     foodSystem.update(canvas);
     snake.update(canvas);
     aiSnakes.update(canvas);
+    gameState.updateCamera(canvas);
     
     foodSystem.checkCollisions(canvas, scoreBoard);
     aiSnakes.checkCollisions(scoreBoard);
@@ -39,7 +40,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-foodSystem.spawnInitialFoods(canvas, 8);
+foodSystem.spawnInitialFoods(canvas);
 obstacles.spawn(canvas);
 aiSnakes.spawn(canvas);
 snake.init();

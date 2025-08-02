@@ -16,8 +16,8 @@ export class FoodSystem {
     if (isPowerUp) {
       const powerUp = this.powerUpEmojis[Math.floor(Math.random() * this.powerUpEmojis.length)];
       food = {
-        x: Math.random() * (canvas.width - 40) + 20,
-        y: Math.random() * (canvas.height - 40) + 20,
+        x: Math.random() * (this.gameState.mapWidth - 40) + 20,
+        y: Math.random() * (this.gameState.mapHeight - 40) + 20,
         dx: (Math.random() - 0.5) * 0.5,
         dy: (Math.random() - 0.5) * 0.5,
         emoji: powerUp.emoji,
@@ -27,8 +27,8 @@ export class FoodSystem {
       };
     } else {
       food = {
-        x: Math.random() * (canvas.width - 40) + 20,
-        y: Math.random() * (canvas.height - 40) + 20,
+        x: Math.random() * (this.gameState.mapWidth - 40) + 20,
+        y: Math.random() * (this.gameState.mapHeight - 40) + 20,
         dx: (Math.random() - 0.5) * 0.5,
         dy: (Math.random() - 0.5) * 0.5,
         emoji: this.emojis[Math.floor(Math.random() * this.emojis.length)],
@@ -39,7 +39,7 @@ export class FoodSystem {
     this.gameState.foods.push(food);
   }
 
-  spawnInitialFoods(canvas, count = 8) {
+  spawnInitialFoods(canvas, count = 40) {
     this.gameState.foods = [];
     for (let i = 0; i < count; i++) {
       this.spawnFood(canvas);
@@ -60,8 +60,8 @@ export class FoodSystem {
       food.x += food.dx;
       food.y += food.dy;
       
-      if (food.x < 20 || food.x > canvas.width - 20) food.dx *= -1;
-      if (food.y < 20 || food.y > canvas.height - 20) food.dy *= -1;
+      if (food.x < 20 || food.x > this.gameState.mapWidth - 20) food.dx *= -1;
+      if (food.y < 20 || food.y > this.gameState.mapHeight - 20) food.dy *= -1;
     });
   }
 

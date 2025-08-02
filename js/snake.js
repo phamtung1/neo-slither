@@ -7,8 +7,8 @@ export class Snake {
     this.gameState.snake = [];
     for (let i = 0; i < this.gameState.snakeLength; i++) {
       this.gameState.snake.push({ 
-        x: window.innerWidth / 2, 
-        y: window.innerHeight / 2 
+        x: this.gameState.mapWidth / 2, 
+        y: this.gameState.mapHeight / 2 
       });
     }
   }
@@ -30,6 +30,9 @@ export class Snake {
       x: head.x + Math.cos(this.gameState.currentAngle) * this.gameState.speed,
       y: head.y + Math.sin(this.gameState.currentAngle) * this.gameState.speed
     };
+
+    newHead.x = Math.max(20, Math.min(this.gameState.mapWidth - 20, newHead.x));
+    newHead.y = Math.max(20, Math.min(this.gameState.mapHeight - 20, newHead.y));
 
     this.gameState.snake.unshift(newHead);
 

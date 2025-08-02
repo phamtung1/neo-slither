@@ -3,14 +3,14 @@ export class AISnakes {
     this.gameState = gameState;
   }
 
-  spawn(canvas, count = 3) {
+  spawn(canvas, count = 15) {
     this.gameState.aiSnakes = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const body = [];
       const length = 20;
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
+      const x = Math.random() * this.gameState.mapWidth;
+      const y = Math.random() * this.gameState.mapHeight;
       
       for (let j = 0; j < length; j++) {
         body.push({ x, y });
@@ -38,8 +38,8 @@ export class AISnakes {
         y: head.y + Math.sin(ai.angle) * ai.speed
       };
 
-      newHead.x = Math.max(20, Math.min(canvas.width - 20, newHead.x));
-      newHead.y = Math.max(20, Math.min(canvas.height - 20, newHead.y));
+      newHead.x = Math.max(20, Math.min(this.gameState.mapWidth - 20, newHead.x));
+      newHead.y = Math.max(20, Math.min(this.gameState.mapHeight - 20, newHead.y));
 
       ai.body.unshift(newHead);
       while (ai.body.length > 20) ai.body.pop();
@@ -72,8 +72,8 @@ export class AISnakes {
     const angle = Math.random() * Math.PI * 2;
     const body = [];
     const length = 20;
-    const x = Math.random() * window.innerWidth;
-    const y = Math.random() * window.innerHeight;
+    const x = Math.random() * this.gameState.mapWidth;
+    const y = Math.random() * this.gameState.mapHeight;
     
     for (let j = 0; j < length; j++) {
       body.push({ x, y });

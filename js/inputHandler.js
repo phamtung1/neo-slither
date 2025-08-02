@@ -13,8 +13,8 @@ export class InputHandler {
 
   setupMouseEvents() {
     document.addEventListener("mousemove", (e) => {
-      this.gameState.target.x = e.clientX;
-      this.gameState.target.y = e.clientY;
+      this.gameState.target.x = e.clientX + this.gameState.camera.x;
+      this.gameState.target.y = e.clientY + this.gameState.camera.y;
     });
 
     document.addEventListener("mousedown", () => {

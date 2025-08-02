@@ -15,10 +15,54 @@ export class Renderer {
     grad.addColorStop(1, `hsl(${(this.gameState.hue + 60) % 360},60%,5%)`);
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.drawGrid();
+    this.drawMapBorder();
+  }
+
+  drawGrid() {
+    this.ctx.save();
+    this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
+    
+    const gridSize = 100;
+    this.ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    this.ctx.lineWidth = 1;
+    
+    // Vertical lines
+    for (let x = 0; x <= this.gameState.mapWidth; x += gridSize) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.gameState.mapHeight);
+      this.ctx.stroke();
+    }
+    
+    // Horizontal lines
+    for (let y = 0; y <= this.gameState.mapHeight; y += gridSize) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(this.gameState.mapWidth, y);
+      this.ctx.stroke();
+    }
+    
+    this.ctx.restore();
+  }
+
+  drawMapBorder() {
+    this.ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    this.ctx.lineWidth = 4;
+    this.ctx.strokeRect(
+      -this.gameState.camera.x,
+      -this.gameState.camera.y,
+      this.gameState.mapWidth,
+      this.gameState.mapHeight
+    );
   }
 
   drawSnake() {
     if (this.gameState.snake.length < 2) return;
+    
+    this.ctx.save();
+    this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
@@ -45,6 +89,7 @@ export class Renderer {
     this.ctx.shadowBlur = 0;
 
     this.drawSnakeHead();
+    this.ctx.restore();
   }
 
   drawSnakeHead() {
@@ -123,13 +168,18 @@ export class Renderer {
   }
 
   drawObstacles() {
+    this.ctx.save();
+    this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     this.ctx.fillStyle = "rgba(200,0,0,0.8)";
     this.gameState.obstacles.forEach(obstacle => {
       this.ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
     });
+    this.ctx.restore();
   }
 
   drawFoods() {
+    this.ctx.save();
+    this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     this.gameState.foods.forEach(food => {
       this.ctx.font = food.isPowerUp ? "32px serif" : "24px serif";
       this.ctx.textAlign = "center";
@@ -139,9 +189,12 @@ export class Renderer {
       this.ctx.fillText(food.emoji, food.x, food.y);
       this.ctx.shadowBlur = 0;
     });
+    this.ctx.restore();
   }
 
   drawAISnakes() {
+    this.ctx.save();
+    this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     this.gameState.aiSnakes.forEach(ai => {
       this.ctx.strokeStyle = `hsl(${ai.colorHue},100%,50%)`;
       this.ctx.lineWidth = this.gameState.snakeThickness * 0.7;
@@ -152,6 +205,7 @@ export class Renderer {
       }
       this.ctx.stroke();
     });
+    this.ctx.restore();
   }
 
   drawPauseScreen() {
@@ -169,7 +223,7 @@ export class Renderer {
     this.drawFoods();
     this.drawAISnakes();
     this.drawSnake();
-    particleSystem.draw(this.ctx);
+    particleSystem.draw(this.ctx, this.gameState.camera);
     this.drawPauseScreen();
   }
 }

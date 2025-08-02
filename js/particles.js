@@ -25,12 +25,15 @@ export class ParticleSystem {
     this.gameState.particles = this.gameState.particles.filter(p => p.alpha > 0);
   }
 
-  draw(ctx) {
+  draw(ctx, camera) {
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
     this.gameState.particles.forEach(particle => {
       ctx.fillStyle = `rgba(${particle.color},${particle.alpha})`;
       ctx.beginPath();
       ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
       ctx.fill();
     });
+    ctx.restore();
   }
 }
