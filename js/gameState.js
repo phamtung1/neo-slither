@@ -11,12 +11,12 @@ export class GameState {
     this.camera = { x: 0, y: 0 };
     
     this.currentAngle = 0;
-    this.baseSpeed = 2;
+    this.baseSpeed = 3;
     this.speed = this.baseSpeed;
     this.score = 0;
     this.target = { x: this.mapWidth / 2, y: this.mapHeight / 2 };
     this.snakeThickness = 20;
-    this.snakeLength = 40;
+    this.snakeLength = 10;
     this.hue = 0;
     this.boosting = false;
     this.paused = false;
@@ -63,7 +63,7 @@ export class GameState {
   }
 
   updateSpeed() {
-    this.speed = this.baseSpeed * (this.boosting ? 2.5 : 1) * (this.boostTimer > 0 ? 2 : 1);
+    this.speed = this.baseSpeed * (this.boosting ? 1.5 : 1) * (this.boostTimer > 0 ? 2 : 1);
   }
 
   updateCamera(canvas) {
