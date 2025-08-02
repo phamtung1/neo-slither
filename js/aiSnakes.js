@@ -4,7 +4,7 @@ export class AISnakes {
     this.explosionSound = new Audio('assets/explosion.mp3');
   }
 
-  spawn(canvas, count = 15) {
+  spawn(canvas, count = 10) {
     this.gameState.aiSnakes = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -65,7 +65,7 @@ export class AISnakes {
       for (let i = 0; i < ai.body.length; i++) {
         const seg = ai.body[i];
         const dist = Math.hypot(playerHead.x - seg.x, playerHead.y - seg.y);
-        if (dist < this.gameState.snakeThickness / 2) {
+        if (dist < this.gameState.getScaledThickness() / 2) {
           this.gameState.incrementScore(10);
           scoreBoard.textContent = "Score: " + this.gameState.score;
           this.gameState.addToSnakeLength(10);
@@ -86,7 +86,7 @@ export class AISnakes {
       for (let i = 1; i < this.gameState.snake.length; i++) {
         const playerSeg = this.gameState.snake[i];
         const dist = Math.hypot(aiHead.x - playerSeg.x, aiHead.y - playerSeg.y);
-        if (dist < this.gameState.snakeThickness / 2) {
+        if (dist < this.gameState.getScaledThickness() / 2) {
           // AI snake explodes
           this.explosionSound.play();
           this.spawnExplosionParticles(aiHead.x, aiHead.y);

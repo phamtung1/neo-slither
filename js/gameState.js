@@ -84,4 +84,11 @@ export class GameState {
   addToSnakeLength(length) {
     this.snakeLength += length;
   }
+
+  getScaledThickness() {
+    // Base thickness of 20, grows by 1 pixel for every 10 length units
+    const baseThickness = 20;
+    const growthRate = 0.1; // 1 pixel per 10 length units
+    return baseThickness + (this.snakeLength - 10) * growthRate;
+  }
 }

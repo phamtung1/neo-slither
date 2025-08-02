@@ -76,7 +76,7 @@ export class Snake {
       const prev = this.gameState.snake[i - 1];
       const curr = this.gameState.snake[i];
       const dist = Math.hypot(prev.x - curr.x, prev.y - curr.y);
-      if (dist > this.gameState.snakeThickness / 2) {
+      if (dist > this.gameState.getScaledThickness() / 2) {
         curr.x += (prev.x - curr.x) * 0.2;
         curr.y += (prev.y - curr.y) * 0.2;
       }

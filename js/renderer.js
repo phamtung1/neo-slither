@@ -76,7 +76,7 @@ export class Renderer {
     grad.addColorStop(1, `hsl(${(this.gameState.hue + 100) % 360},100%,40%)`);
 
     this.ctx.strokeStyle = grad;
-    this.ctx.lineWidth = this.gameState.snakeThickness;
+    this.ctx.lineWidth = this.gameState.getScaledThickness();
     this.ctx.shadowColor = this.gameState.shieldTimer > 0 ? 'cyan' : `hsl(${(this.gameState.hue) % 360},100%,60%)`;
     this.ctx.shadowBlur = this.gameState.shieldTimer > 0 ? 40 : this.gameState.boosting ? 25 : 15;
 
@@ -99,8 +99,8 @@ export class Renderer {
       this.ctx.fillStyle = 'black';
       this.ctx.beginPath();
       this.ctx.arc(
-        head.x + Math.cos(this.gameState.currentAngle) * this.gameState.snakeThickness / 1.8,
-        head.y + Math.sin(this.gameState.currentAngle) * this.gameState.snakeThickness / 1.8,
+        head.x + Math.cos(this.gameState.currentAngle) * this.gameState.getScaledThickness() / 1.8,
+        head.y + Math.sin(this.gameState.currentAngle) * this.gameState.getScaledThickness() / 1.8,
         4, 0, Math.PI * 2
       );
       this.ctx.fill();
@@ -112,8 +112,8 @@ export class Renderer {
 
   drawTongue(head) {
     if (this.gameState.tongueTimer % 60 < 30) {
-      const tx = head.x + Math.cos(this.gameState.currentAngle) * this.gameState.snakeThickness / 1.5;
-      const ty = head.y + Math.sin(this.gameState.currentAngle) * this.gameState.snakeThickness / 1.5;
+      const tx = head.x + Math.cos(this.gameState.currentAngle) * this.gameState.getScaledThickness() / 1.5;
+      const ty = head.y + Math.sin(this.gameState.currentAngle) * this.gameState.getScaledThickness() / 1.5;
       
       this.ctx.strokeStyle = 'red';
       this.ctx.lineWidth = 3;
@@ -147,8 +147,8 @@ export class Renderer {
   }
 
   drawEyes(head) {
-    const eyeOffsetX = Math.cos(this.gameState.currentAngle + Math.PI / 2) * this.gameState.snakeThickness / 2.5;
-    const eyeOffsetY = Math.sin(this.gameState.currentAngle + Math.PI / 2) * this.gameState.snakeThickness / 2.5;
+    const eyeOffsetX = Math.cos(this.gameState.currentAngle + Math.PI / 2) * this.gameState.getScaledThickness() / 2.5;
+    const eyeOffsetY = Math.sin(this.gameState.currentAngle + Math.PI / 2) * this.gameState.getScaledThickness() / 2.5;
 
     [[eyeOffsetX, eyeOffsetY], [-eyeOffsetX, -eyeOffsetY]].forEach(offset => {
       if (this.gameState.blinking) {
@@ -205,7 +205,7 @@ export class Renderer {
       bodyGrad.addColorStop(1, `hsl(${ai.colorHue},100%,30%)`);
       
       this.ctx.strokeStyle = bodyGrad;
-      this.ctx.lineWidth = this.gameState.snakeThickness * 0.7;
+      this.ctx.lineWidth = this.gameState.getScaledThickness() * 0.7;
       this.ctx.shadowColor = `hsl(${ai.colorHue},100%,50%)`;
       this.ctx.shadowBlur = 10;
       
@@ -225,7 +225,7 @@ export class Renderer {
 
   drawAISnakeHead(ai) {
     const head = ai.body[0];
-    const thickness = this.gameState.snakeThickness * 0.7;
+    const thickness = this.gameState.getScaledThickness() * 0.7;
     
     // Calculate eye positions
     const eyeOffsetX = Math.cos(ai.angle + Math.PI / 2) * thickness / 2.5;
