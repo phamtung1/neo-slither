@@ -255,11 +255,81 @@ export class Renderer {
   drawObstacles() {
     this.ctx.save();
     this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
-    this.ctx.fillStyle = "rgba(200,0,0,0.8)";
     this.gameState.obstacles.forEach(obstacle => {
-      this.ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+      this.draw3DObstacle(obstacle);
     });
     this.ctx.restore();
+  }
+
+  draw3DObstacle(obstacle) {
+    const { x, y, w, h } = obstacle;
+    const depth = 12; // 3D depth effect
+    
+    // Draw top face (brightest)
+    const topGradient = this.ctx.createLinearGradient(x, y, x + w, y);
+    topGradient.addColorStop(0, 'hsl(0,70%,60%)'); // Light red
+    topGradient.addColorStop(1, 'hsl(0,80%,50%)'); // Medium red
+    
+    this.ctx.fillStyle = topGradient;
+    this.ctx.fillRect(x, y, w, h);
+    
+    // Draw right side face (medium brightness)
+    const rightGradient = this.ctx.createLinearGradient(x + w, y, x + w, y + h);
+    rightGradient.addColorStop(0, 'hsl(0,85%,40%)'); // Medium-dark red
+    rightGradient.addColorStop(1, 'hsl(0,90%,30%)'); // Darker red
+    
+    this.ctx.fillStyle = rightGradient;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w, y);
+    this.ctx.lineTo(x + w + depth, y - depth);
+    this.ctx.lineTo(x + w + depth, y + h - depth);
+    this.ctx.lineTo(x + w, y + h);
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Draw top face (isometric view)
+    const topIsoGradient = this.ctx.createLinearGradient(x, y, x + w + depth, y - depth);
+    topIsoGradient.addColorStop(0, 'hsl(0,75%,65%)'); // Brightest
+    topIsoGradient.addColorStop(1, 'hsl(0,80%,55%)'); // Light red
+    
+    this.ctx.fillStyle = topIsoGradient;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + depth, y - depth);
+    this.ctx.lineTo(x + w + depth, y - depth);
+    this.ctx.lineTo(x + w, y);
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Add subtle glow/shadow
+    this.ctx.shadowColor = 'rgba(150,0,0,0.4)';
+    this.ctx.shadowBlur = 8;
+    this.ctx.shadowOffsetX = 3;
+    this.ctx.shadowOffsetY = 3;
+    
+    // Redraw front face with shadow
+    this.ctx.fillStyle = topGradient;
+    this.ctx.fillRect(x, y, w, h);
+    
+    // Reset shadow
+    this.ctx.shadowColor = 'transparent';
+    this.ctx.shadowBlur = 0;
+    this.ctx.shadowOffsetX = 0;
+    this.ctx.shadowOffsetY = 0;
+    
+    // Add edge highlights for more definition
+    this.ctx.strokeStyle = 'hsl(0,60%,70%)';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(x, y, w, h);
+    
+    // Highlight edges of 3D faces
+    this.ctx.strokeStyle = 'hsl(0,50%,45%)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w, y);
+    this.ctx.lineTo(x + w + depth, y - depth);
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + depth, y - depth);
+    this.ctx.stroke();
   }
 
   drawFoods() {
