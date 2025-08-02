@@ -54,8 +54,7 @@ export class Obstacles {
       let obstacle = {
         x: 0, y: 0, // Will be set after calculating bounds
         shape: selectedShape.type,
-        size: baseSize,
-        rotation: Math.random() * Math.PI * 2 // Random rotation for variety
+        size: baseSize
       };
 
       // Set shape-specific properties

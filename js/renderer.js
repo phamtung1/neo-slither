@@ -310,16 +310,7 @@ export class Renderer {
   }
 
   draw3DObstacle(obstacle) {
-    this.ctx.save();
-    
-    // Apply rotation if specified
-    if (obstacle.rotation) {
-      this.ctx.translate(obstacle.x + obstacle.w / 2, obstacle.y + obstacle.h / 2);
-      this.ctx.rotate(obstacle.rotation);
-      this.ctx.translate(-(obstacle.w / 2), -(obstacle.h / 2));
-    }
-    
-    // Draw based on shape type
+    // Draw based on shape type without rotation
     switch (obstacle.shape) {
       case 'rectangle':
         this.drawRectangle3D(obstacle);
@@ -339,35 +330,31 @@ export class Renderer {
       default:
         this.drawRectangle3D(obstacle);
     }
-    
-    this.ctx.restore();
   }
 
   drawRectangle3D(obstacle) {
     const { x, y, w, h } = obstacle;
     const depth = 12;
     
-    // Use existing rectangle 3D logic
+    // Front face gradient
     const topGradient = this.ctx.createLinearGradient(x, y, x + w, y);
     topGradient.addColorStop(0, 'hsl(0,70%,60%)');
     topGradient.addColorStop(1, 'hsl(0,80%,50%)');
     
     this.ctx.fillStyle = topGradient;
-    this.ctx.fillRect(obstacle.rotation ? 0 : x, obstacle.rotation ? 0 : y, w, h);
+    this.ctx.fillRect(x, y, w, h);
     
-    // Side face
+    // Right side face
     const rightGradient = this.ctx.createLinearGradient(x + w, y, x + w, y + h);
     rightGradient.addColorStop(0, 'hsl(0,85%,40%)');
     rightGradient.addColorStop(1, 'hsl(0,90%,30%)');
     
     this.ctx.fillStyle = rightGradient;
     this.ctx.beginPath();
-    const rx = obstacle.rotation ? w : x + w;
-    const ry = obstacle.rotation ? 0 : y;
-    this.ctx.moveTo(rx, ry);
-    this.ctx.lineTo(rx + depth, ry - depth);
-    this.ctx.lineTo(rx + depth, ry + h - depth);
-    this.ctx.lineTo(rx, ry + h);
+    this.ctx.moveTo(x + w, y);
+    this.ctx.lineTo(x + w + depth, y - depth);
+    this.ctx.lineTo(x + w + depth, y + h - depth);
+    this.ctx.lineTo(x + w, y + h);
     this.ctx.closePath();
     this.ctx.fill();
     
@@ -378,19 +365,17 @@ export class Renderer {
     
     this.ctx.fillStyle = topIsoGradient;
     this.ctx.beginPath();
-    const tx = obstacle.rotation ? 0 : x;
-    const ty = obstacle.rotation ? 0 : y;
-    this.ctx.moveTo(tx, ty);
-    this.ctx.lineTo(tx + depth, ty - depth);
-    this.ctx.lineTo(tx + w + depth, ty - depth);
-    this.ctx.lineTo(tx + w, ty);
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + depth, y - depth);
+    this.ctx.lineTo(x + w + depth, y - depth);
+    this.ctx.lineTo(x + w, y);
     this.ctx.closePath();
     this.ctx.fill();
   }
 
   drawCircle3D(obstacle) {
-    const centerX = obstacle.rotation ? 0 : obstacle.x + obstacle.radius;
-    const centerY = obstacle.rotation ? 0 : obstacle.y + obstacle.radius;
+    const centerX = obstacle.x + obstacle.radius;
+    const centerY = obstacle.y + obstacle.radius;
     const radius = obstacle.radius;
     const depth = 10;
     
@@ -420,8 +405,8 @@ export class Renderer {
   }
 
   drawTriangle3D(obstacle) {
-    const x = obstacle.rotation ? 0 : obstacle.x;
-    const y = obstacle.rotation ? 0 : obstacle.y;
+    const x = obstacle.x;
+    const y = obstacle.y;
     const w = obstacle.w;
     const h = obstacle.h;
     const depth = 8;
@@ -451,8 +436,8 @@ export class Renderer {
   }
 
   drawHexagon3D(obstacle) {
-    const centerX = obstacle.rotation ? 0 : obstacle.x + obstacle.radius;
-    const centerY = obstacle.rotation ? 0 : obstacle.y + obstacle.radius;
+    const centerX = obstacle.x + obstacle.radius;
+    const centerY = obstacle.y + obstacle.radius;
     const radius = obstacle.radius;
     const depth = 8;
     
@@ -499,8 +484,8 @@ export class Renderer {
   }
 
   drawDiamond3D(obstacle) {
-    const x = obstacle.rotation ? 0 : obstacle.x;
-    const y = obstacle.rotation ? 0 : obstacle.y;
+    const x = obstacle.x;
+    const y = obstacle.y;
     const w = obstacle.w;
     const h = obstacle.h;
     const depth = 10;
