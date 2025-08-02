@@ -262,74 +262,231 @@ export class Renderer {
   }
 
   draw3DObstacle(obstacle) {
-    const { x, y, w, h } = obstacle;
-    const depth = 12; // 3D depth effect
+    this.ctx.save();
     
-    // Draw top face (brightest)
+    // Apply rotation if specified
+    if (obstacle.rotation) {
+      this.ctx.translate(obstacle.x + obstacle.w / 2, obstacle.y + obstacle.h / 2);
+      this.ctx.rotate(obstacle.rotation);
+      this.ctx.translate(-(obstacle.w / 2), -(obstacle.h / 2));
+    }
+    
+    // Draw based on shape type
+    switch (obstacle.shape) {
+      case 'rectangle':
+        this.drawRectangle3D(obstacle);
+        break;
+      case 'circle':
+        this.drawCircle3D(obstacle);
+        break;
+      case 'triangle':
+        this.drawTriangle3D(obstacle);
+        break;
+      case 'hexagon':
+        this.drawHexagon3D(obstacle);
+        break;
+      case 'diamond':
+        this.drawDiamond3D(obstacle);
+        break;
+      default:
+        this.drawRectangle3D(obstacle);
+    }
+    
+    this.ctx.restore();
+  }
+
+  drawRectangle3D(obstacle) {
+    const { x, y, w, h } = obstacle;
+    const depth = 12;
+    
+    // Use existing rectangle 3D logic
     const topGradient = this.ctx.createLinearGradient(x, y, x + w, y);
-    topGradient.addColorStop(0, 'hsl(0,70%,60%)'); // Light red
-    topGradient.addColorStop(1, 'hsl(0,80%,50%)'); // Medium red
+    topGradient.addColorStop(0, 'hsl(0,70%,60%)');
+    topGradient.addColorStop(1, 'hsl(0,80%,50%)');
     
     this.ctx.fillStyle = topGradient;
-    this.ctx.fillRect(x, y, w, h);
+    this.ctx.fillRect(obstacle.rotation ? 0 : x, obstacle.rotation ? 0 : y, w, h);
     
-    // Draw right side face (medium brightness)
+    // Side face
     const rightGradient = this.ctx.createLinearGradient(x + w, y, x + w, y + h);
-    rightGradient.addColorStop(0, 'hsl(0,85%,40%)'); // Medium-dark red
-    rightGradient.addColorStop(1, 'hsl(0,90%,30%)'); // Darker red
+    rightGradient.addColorStop(0, 'hsl(0,85%,40%)');
+    rightGradient.addColorStop(1, 'hsl(0,90%,30%)');
     
     this.ctx.fillStyle = rightGradient;
     this.ctx.beginPath();
-    this.ctx.moveTo(x + w, y);
-    this.ctx.lineTo(x + w + depth, y - depth);
+    const rx = obstacle.rotation ? w : x + w;
+    const ry = obstacle.rotation ? 0 : y;
+    this.ctx.moveTo(rx, ry);
+    this.ctx.lineTo(rx + depth, ry - depth);
+    this.ctx.lineTo(rx + depth, ry + h - depth);
+    this.ctx.lineTo(rx, ry + h);
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Top face
+    const topIsoGradient = this.ctx.createLinearGradient(x, y, x + w + depth, y - depth);
+    topIsoGradient.addColorStop(0, 'hsl(0,75%,65%)');
+    topIsoGradient.addColorStop(1, 'hsl(0,80%,55%)');
+    
+    this.ctx.fillStyle = topIsoGradient;
+    this.ctx.beginPath();
+    const tx = obstacle.rotation ? 0 : x;
+    const ty = obstacle.rotation ? 0 : y;
+    this.ctx.moveTo(tx, ty);
+    this.ctx.lineTo(tx + depth, ty - depth);
+    this.ctx.lineTo(tx + w + depth, ty - depth);
+    this.ctx.lineTo(tx + w, ty);
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+
+  drawCircle3D(obstacle) {
+    const centerX = obstacle.rotation ? 0 : obstacle.x + obstacle.radius;
+    const centerY = obstacle.rotation ? 0 : obstacle.y + obstacle.radius;
+    const radius = obstacle.radius;
+    const depth = 10;
+    
+    // Draw shadow ellipse first
+    this.ctx.fillStyle = 'hsl(0,90%,25%)';
+    this.ctx.save();
+    this.ctx.translate(centerX + depth, centerY - depth);
+    this.ctx.scale(1, 0.6);
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.restore();
+    
+    // Draw main cylinder with gradient
+    const radialGrad = this.ctx.createRadialGradient(
+      centerX - radius * 0.3, centerY - radius * 0.3, 0,
+      centerX, centerY, radius
+    );
+    radialGrad.addColorStop(0, 'hsl(0,70%,70%)');
+    radialGrad.addColorStop(0.7, 'hsl(0,80%,50%)');
+    radialGrad.addColorStop(1, 'hsl(0,90%,30%)');
+    
+    this.ctx.fillStyle = radialGrad;
+    this.ctx.beginPath();
+    this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
+  drawTriangle3D(obstacle) {
+    const x = obstacle.rotation ? 0 : obstacle.x;
+    const y = obstacle.rotation ? 0 : obstacle.y;
+    const w = obstacle.w;
+    const h = obstacle.h;
+    const depth = 8;
+    
+    // Main triangle face
+    const triGrad = this.ctx.createLinearGradient(x, y, x + w, y + h);
+    triGrad.addColorStop(0, 'hsl(0,70%,65%)');
+    triGrad.addColorStop(1, 'hsl(0,80%,45%)');
+    
+    this.ctx.fillStyle = triGrad;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w / 2, y);      // Top point
+    this.ctx.lineTo(x, y + h);          // Bottom left
+    this.ctx.lineTo(x + w, y + h);      // Bottom right
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Right side face
+    this.ctx.fillStyle = 'hsl(0,85%,35%)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w / 2, y);
+    this.ctx.lineTo(x + w / 2 + depth, y - depth);
     this.ctx.lineTo(x + w + depth, y + h - depth);
     this.ctx.lineTo(x + w, y + h);
     this.ctx.closePath();
     this.ctx.fill();
+  }
+
+  drawHexagon3D(obstacle) {
+    const centerX = obstacle.rotation ? 0 : obstacle.x + obstacle.radius;
+    const centerY = obstacle.rotation ? 0 : obstacle.y + obstacle.radius;
+    const radius = obstacle.radius;
+    const depth = 8;
     
-    // Draw top face (isometric view)
-    const topIsoGradient = this.ctx.createLinearGradient(x, y, x + w + depth, y - depth);
-    topIsoGradient.addColorStop(0, 'hsl(0,75%,65%)'); // Brightest
-    topIsoGradient.addColorStop(1, 'hsl(0,80%,55%)'); // Light red
+    // Create hexagon points
+    const points = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3;
+      points.push({
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle)
+      });
+    }
     
-    this.ctx.fillStyle = topIsoGradient;
+    // Main hexagon face
+    const hexGrad = this.ctx.createRadialGradient(
+      centerX - radius * 0.2, centerY - radius * 0.2, 0,
+      centerX, centerY, radius
+    );
+    hexGrad.addColorStop(0, 'hsl(0,70%,65%)');
+    hexGrad.addColorStop(1, 'hsl(0,85%,40%)');
+    
+    this.ctx.fillStyle = hexGrad;
     this.ctx.beginPath();
-    this.ctx.moveTo(x, y);
-    this.ctx.lineTo(x + depth, y - depth);
-    this.ctx.lineTo(x + w + depth, y - depth);
-    this.ctx.lineTo(x + w, y);
+    this.ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      this.ctx.lineTo(points[i].x, points[i].y);
+    }
     this.ctx.closePath();
     this.ctx.fill();
     
-    // Add subtle glow/shadow
-    this.ctx.shadowColor = 'rgba(150,0,0,0.4)';
-    this.ctx.shadowBlur = 8;
-    this.ctx.shadowOffsetX = 3;
-    this.ctx.shadowOffsetY = 3;
+    // Side faces (draw a few for 3D effect)
+    this.ctx.fillStyle = 'hsl(0,90%,30%)';
+    for (let i = 0; i < 3; i++) {
+      const p1 = points[i];
+      const p2 = points[(i + 1) % 6];
+      this.ctx.beginPath();
+      this.ctx.moveTo(p1.x, p1.y);
+      this.ctx.lineTo(p1.x + depth, p1.y - depth);
+      this.ctx.lineTo(p2.x + depth, p2.y - depth);
+      this.ctx.lineTo(p2.x, p2.y);
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
+  }
+
+  drawDiamond3D(obstacle) {
+    const x = obstacle.rotation ? 0 : obstacle.x;
+    const y = obstacle.rotation ? 0 : obstacle.y;
+    const w = obstacle.w;
+    const h = obstacle.h;
+    const depth = 10;
     
-    // Redraw front face with shadow
-    this.ctx.fillStyle = topGradient;
-    this.ctx.fillRect(x, y, w, h);
+    // Diamond points
+    const centerX = x + w / 2;
+    const centerY = y + h / 2;
     
-    // Reset shadow
-    this.ctx.shadowColor = 'transparent';
-    this.ctx.shadowBlur = 0;
-    this.ctx.shadowOffsetX = 0;
-    this.ctx.shadowOffsetY = 0;
+    // Main diamond face
+    const diamondGrad = this.ctx.createRadialGradient(
+      centerX - w * 0.2, centerY - h * 0.2, 0,
+      centerX, centerY, Math.max(w, h) / 2
+    );
+    diamondGrad.addColorStop(0, 'hsl(0,70%,70%)');
+    diamondGrad.addColorStop(1, 'hsl(0,85%,40%)');
     
-    // Add edge highlights for more definition
-    this.ctx.strokeStyle = 'hsl(0,60%,70%)';
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(x, y, w, h);
-    
-    // Highlight edges of 3D faces
-    this.ctx.strokeStyle = 'hsl(0,50%,45%)';
+    this.ctx.fillStyle = diamondGrad;
     this.ctx.beginPath();
-    this.ctx.moveTo(x + w, y);
-    this.ctx.lineTo(x + w + depth, y - depth);
-    this.ctx.moveTo(x, y);
-    this.ctx.lineTo(x + depth, y - depth);
-    this.ctx.stroke();
+    this.ctx.moveTo(centerX, y);           // Top
+    this.ctx.lineTo(x + w, centerY);       // Right
+    this.ctx.lineTo(centerX, y + h);       // Bottom
+    this.ctx.lineTo(x, centerY);           // Left
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Right side face
+    this.ctx.fillStyle = 'hsl(0,90%,30%)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerX, y);
+    this.ctx.lineTo(centerX + depth, y - depth);
+    this.ctx.lineTo(x + w + depth, centerY - depth);
+    this.ctx.lineTo(x + w, centerY);
+    this.ctx.closePath();
+    this.ctx.fill();
   }
 
   drawFoods() {
