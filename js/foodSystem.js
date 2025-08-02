@@ -65,7 +65,7 @@ export class FoodSystem {
     });
   }
 
-  checkCollisions(canvas, scoreBoard) {
+  checkCollisions(canvas, scoreBoard, lengthDisplay) {
     const head = this.gameState.snake[0];
     
     this.gameState.foods.forEach((food, index) => {
@@ -74,6 +74,7 @@ export class FoodSystem {
         this.gameState.incrementScore(food.isPowerUp ? 5 : 1);
         scoreBoard.textContent = "Score:" + this.gameState.score;
         this.gameState.addToSnakeLength(food.isPowerUp ? 10 : 2);
+        lengthDisplay.textContent = "Length: " + this.gameState.snakeLength;
         
         this.eatSound.play();
         this.gameState.mouthTimer = 10;

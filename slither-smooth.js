@@ -10,6 +10,7 @@ import { Obstacles } from './js/obstacles.js';
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreBoard = document.getElementById("scoreBoard");
+const lengthDisplay = document.getElementById("lengthDisplay");
 
 const gameState = new GameState();
 const snake = new Snake(gameState);
@@ -30,8 +31,8 @@ function gameLoop() {
     aiSnakes.update(canvas);
     gameState.updateCamera(canvas);
     
-    foodSystem.checkCollisions(canvas, scoreBoard);
-    aiSnakes.checkCollisions(scoreBoard);
+    foodSystem.checkCollisions(canvas, scoreBoard, lengthDisplay);
+    aiSnakes.checkCollisions(scoreBoard, lengthDisplay);
     
     particleSystem.update();
   }

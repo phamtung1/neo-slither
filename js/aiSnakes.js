@@ -57,7 +57,7 @@ export class AISnakes {
     });
   }
 
-  checkCollisions(scoreBoard) {
+  checkCollisions(scoreBoard, lengthDisplay) {
     const playerHead = this.gameState.snake[0];
     
     this.gameState.aiSnakes.forEach((ai, aiIndex) => {
@@ -69,8 +69,9 @@ export class AISnakes {
           this.gameState.incrementScore(10);
           scoreBoard.textContent = "Score: " + this.gameState.score;
           this.gameState.addToSnakeLength(10);
+          lengthDisplay.textContent = "Length: " + this.gameState.snakeLength;
           
-          const eatSound = new Audio('assets/eat.mpg');
+          const eatSound = new Audio('assets/eat.mp3');
           eatSound.play();
           
           this.spawnEatParticles(seg.x, seg.y);
@@ -92,8 +93,9 @@ export class AISnakes {
           this.gameState.aiSnakes.splice(aiIndex, 1);
           
           // Player gets shorter
-          const shortenAmount = Math.min(15, this.gameState.snakeLength - 10);
+          const shortenAmount = Math.min(5, this.gameState.snakeLength - 10);
           this.gameState.snakeLength -= shortenAmount;
+          lengthDisplay.textContent = "Length: " + this.gameState.snakeLength;
           
           // Remove snake segments
           const removeSegments = Math.min(shortenAmount * 2, this.gameState.snake.length - 2);

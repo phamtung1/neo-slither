@@ -37,3 +37,12 @@ canvas {
   color: #00FFCC;
   text-shadow: 0 0 5px #00FFCC;
 }
+
+#lengthDisplay {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 18px;
+  color: #00FFCC;
+  text-shadow: 0 0 5px #00FFCC;
+}
