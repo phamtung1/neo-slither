@@ -6,7 +6,7 @@ export class FoodSystem {
       { emoji: '⭐', type: 'boost' },
       { emoji: '🛡', type: 'shield' }
     ];
-    this.eatSound = new Audio('assets/eat.mpg');
+    this.eatSound = new Audio('assets/eat.mp3');
   }
 
   spawnFood(canvas) {
@@ -39,7 +39,7 @@ export class FoodSystem {
     this.gameState.foods.push(food);
   }
 
-  spawnInitialFoods(canvas, count = 40) {
+  spawnInitialFoods(canvas, count = 400) {
     this.gameState.foods = [];
     for (let i = 0; i < count; i++) {
       this.spawnFood(canvas);
@@ -53,8 +53,8 @@ export class FoodSystem {
       
       if (dist < 100) {
         const angleAway = Math.atan2(food.y - head.y, food.x - head.x);
-        food.dx += Math.cos(angleAway) * 0.1;
-        food.dy += Math.sin(angleAway) * 0.1;
+        food.dx += Math.cos(angleAway) * 0.08;
+        food.dy += Math.sin(angleAway) * 0.08;
       }
       
       food.x += food.dx;

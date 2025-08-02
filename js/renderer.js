@@ -181,7 +181,7 @@ export class Renderer {
     this.ctx.save();
     this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     this.gameState.foods.forEach(food => {
-      this.ctx.font = food.isPowerUp ? "32px serif" : "24px serif";
+      this.ctx.font = food.isPowerUp ? "28px serif" : "18px serif";
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
       this.ctx.shadowColor = `hsl(${food.hue},100%,${food.isPowerUp ? '80%' : '60%'})`;
