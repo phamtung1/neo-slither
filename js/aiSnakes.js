@@ -20,7 +20,9 @@ export class AISnakes {
         angle,
         speed: 1.5,
         body,
-        colorHue: Math.random() * 360
+        colorHue: Math.random() * 360,
+        blinkTimer: Math.random() * 200,
+        blinking: false
       });
     }
   }
@@ -29,6 +31,14 @@ export class AISnakes {
     this.gameState.aiSnakes.forEach((ai, index) => {
       const head = ai.body[0];
       const playerHead = this.gameState.snake[0];
+
+      // Update blinking
+      ai.blinkTimer++;
+      if (ai.blinkTimer > 200) ai.blinking = true;
+      if (ai.blinkTimer > 210) {
+        ai.blinking = false;
+        ai.blinkTimer = Math.random() * 100;
+      }
 
       const angleToPlayer = Math.atan2(playerHead.y - head.y, playerHead.x - head.x);
       ai.angle += (angleToPlayer - ai.angle) * 0.05 + (Math.random() - 0.5) * 0.05;
@@ -83,7 +93,9 @@ export class AISnakes {
       angle,
       speed: 1.5,
       body,
-      colorHue: Math.random() * 360
+      colorHue: Math.random() * 360,
+      blinkTimer: Math.random() * 200,
+      blinking: false
     });
   }
 

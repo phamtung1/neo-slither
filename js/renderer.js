@@ -196,16 +196,64 @@ export class Renderer {
     this.ctx.save();
     this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     this.gameState.aiSnakes.forEach(ai => {
-      this.ctx.strokeStyle = `hsl(${ai.colorHue},100%,50%)`;
+      // Draw snake body with more menacing appearance
+      const bodyGrad = this.ctx.createLinearGradient(
+        ai.body[0].x, ai.body[0].y,
+        ai.body[ai.body.length - 1].x, ai.body[ai.body.length - 1].y
+      );
+      bodyGrad.addColorStop(0, `hsl(${ai.colorHue},100%,60%)`);
+      bodyGrad.addColorStop(1, `hsl(${ai.colorHue},100%,30%)`);
+      
+      this.ctx.strokeStyle = bodyGrad;
       this.ctx.lineWidth = this.gameState.snakeThickness * 0.7;
+      this.ctx.shadowColor = `hsl(${ai.colorHue},100%,50%)`;
+      this.ctx.shadowBlur = 10;
+      
       this.ctx.beginPath();
       this.ctx.moveTo(ai.body[0].x, ai.body[0].y);
       for (let i = 1; i < ai.body.length; i++) {
         this.ctx.lineTo(ai.body[i].x, ai.body[i].y);
       }
       this.ctx.stroke();
+      this.ctx.shadowBlur = 0;
+      
+      // Draw eyes
+      this.drawAISnakeHead(ai);
     });
     this.ctx.restore();
+  }
+
+  drawAISnakeHead(ai) {
+    const head = ai.body[0];
+    const thickness = this.gameState.snakeThickness * 0.7;
+    
+    // Calculate eye positions
+    const eyeOffsetX = Math.cos(ai.angle + Math.PI / 2) * thickness / 2.5;
+    const eyeOffsetY = Math.sin(ai.angle + Math.PI / 2) * thickness / 2.5;
+    
+    // Draw menacing red eyes
+    [[eyeOffsetX, eyeOffsetY], [-eyeOffsetX, -eyeOffsetY]].forEach(offset => {
+      if (ai.blinking) {
+        // Closed eyes - angry slits
+        this.ctx.fillStyle = 'darkred';
+        this.ctx.fillRect(head.x + offset[0] - 3, head.y + offset[1] - 1, 6, 2);
+      } else {
+        // Open eyes - glowing red
+        this.ctx.fillStyle = 'red';
+        this.ctx.shadowColor = 'red';
+        this.ctx.shadowBlur = 8;
+        this.ctx.beginPath();
+        this.ctx.arc(head.x + offset[0], head.y + offset[1], 4, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Eye pupils - black centers
+        this.ctx.shadowBlur = 0;
+        this.ctx.fillStyle = 'black';
+        this.ctx.beginPath();
+        this.ctx.arc(head.x + offset[0] + 1, head.y + offset[1], 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+    });
   }
 
   drawPauseScreen() {
