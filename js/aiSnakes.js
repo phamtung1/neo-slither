@@ -1,6 +1,7 @@
 export class AISnakes {
   constructor(gameState) {
     this.gameState = gameState;
+    this.explosionSound = new Audio('assets/explosion.mp3');
   }
 
   spawn(canvas, count = 15) {
@@ -57,10 +58,13 @@ export class AISnakes {
   }
 
   checkCollisions(scoreBoard) {
-    this.gameState.aiSnakes.forEach((ai, index) => {
+    const playerHead = this.gameState.snake[0];
+    
+    this.gameState.aiSnakes.forEach((ai, aiIndex) => {
+      // Check if player eats AI snake
       for (let i = 0; i < ai.body.length; i++) {
         const seg = ai.body[i];
-        const dist = Math.hypot(this.gameState.snake[0].x - seg.x, this.gameState.snake[0].y - seg.y);
+        const dist = Math.hypot(playerHead.x - seg.x, playerHead.y - seg.y);
         if (dist < this.gameState.snakeThickness / 2) {
           this.gameState.incrementScore(10);
           scoreBoard.textContent = "Score: " + this.gameState.score;
@@ -70,7 +74,34 @@ export class AISnakes {
           eatSound.play();
           
           this.spawnEatParticles(seg.x, seg.y);
-          this.gameState.aiSnakes.splice(index, 1);
+          this.gameState.aiSnakes.splice(aiIndex, 1);
+          this.spawnSingle();
+          break;
+        }
+      }
+      
+      // Check if AI snake touches player's body (except head)
+      const aiHead = ai.body[0];
+      for (let i = 1; i < this.gameState.snake.length; i++) {
+        const playerSeg = this.gameState.snake[i];
+        const dist = Math.hypot(aiHead.x - playerSeg.x, aiHead.y - playerSeg.y);
+        if (dist < this.gameState.snakeThickness / 2) {
+          // AI snake explodes
+          this.explosionSound.play();
+          this.spawnExplosionParticles(aiHead.x, aiHead.y);
+          this.gameState.aiSnakes.splice(aiIndex, 1);
+          
+          // Player gets shorter
+          const shortenAmount = Math.min(15, this.gameState.snakeLength - 10);
+          this.gameState.snakeLength -= shortenAmount;
+          
+          // Remove snake segments
+          const removeSegments = Math.min(shortenAmount * 2, this.gameState.snake.length - 2);
+          for (let j = 0; j < removeSegments; j++) {
+            this.gameState.snake.pop();
+          }
+          
+          // Spawn new AI snake to replace exploded one
           this.spawnSingle();
           break;
         }
@@ -108,6 +139,19 @@ export class AISnakes {
         alpha: 1,
         radius: Math.random() * 2 + 2,
         color: "255,215,0"
+      });
+    }
+  }
+
+  spawnExplosionParticles(x, y) {
+    for (let i = 0; i < 50; i++) {
+      this.gameState.particles.push({
+        x, y,
+        dx: (Math.random() - 0.5) * 8,
+        dy: (Math.random() - 0.5) * 8,
+        alpha: 1,
+        radius: Math.random() * 4 + 3,
+        color: Math.random() < 0.5 ? "255,100,100" : "255,200,0"
       });
     }
   }
