@@ -72,69 +72,117 @@ export class Renderer {
   draw3DSnakeSegments() {
     const thickness = this.gameState.getScaledThickness();
     
-    // Draw each segment as a 3D cylinder
-    for (let i = 0; i < this.gameState.snake.length - 1; i++) {
+    // Performance optimization: limit segments drawn based on snake length
+    const maxSegments = Math.min(this.gameState.snake.length - 1, 80); // Cap at 80 segments
+    const skipFactor = Math.max(1, Math.floor((this.gameState.snake.length - 1) / maxSegments));
+    
+    // Cache common calculations
+    const baseHue = this.gameState.hue % 360;
+    const shadowColor = this.gameState.shieldTimer > 0 ? 'cyan' : `hsl(${baseHue},100%,60%)`;
+    const shadowBlur = this.gameState.shieldTimer > 0 ? 30 : this.gameState.boosting ? 20 : 10;
+    
+    // Draw segments with level-of-detail optimization
+    for (let i = 0; i < this.gameState.snake.length - 1; i += skipFactor) {
       const current = this.gameState.snake[i];
-      const next = this.gameState.snake[i + 1];
+      const next = this.gameState.snake[Math.min(i + skipFactor, this.gameState.snake.length - 1)];
+      
+      // Skip segments that are off-screen (frustum culling)
+      if (!this.isSegmentVisible(current, next, thickness)) {
+        continue;
+      }
       
       // Calculate segment angle
       const angle = Math.atan2(next.y - current.y, next.x - current.x);
       const perpAngle = angle + Math.PI / 2;
       
-      // Calculate 3D effect offsets
-      const topOffset = thickness * 0.4;
-      const bottomOffset = thickness * 0.5;
+      // Simplified 3D effect for long snakes
+      const segmentHue = (baseHue + i) % 360;
       
-      // Top highlight (light source from top-left)
-      const topGrad = this.ctx.createLinearGradient(
-        current.x - Math.cos(perpAngle) * topOffset,
-        current.y - Math.sin(perpAngle) * topOffset,
-        current.x + Math.cos(perpAngle) * topOffset,
-        current.y + Math.sin(perpAngle) * topOffset
-      );
-      
-      const baseHue = (this.gameState.hue + i * 2) % 360;
-      topGrad.addColorStop(0, `hsl(${baseHue},85%,75%)`); // Bright highlight
-      topGrad.addColorStop(0.3, `hsl(${baseHue},90%,65%)`); // Main color
-      topGrad.addColorStop(0.7, `hsl(${baseHue},95%,45%)`); // Mid tone
-      topGrad.addColorStop(1, `hsl(${baseHue},100%,25%)`); // Dark shadow
-      
-      // Draw main body with 3D gradient
-      this.ctx.strokeStyle = topGrad;
-      this.ctx.lineWidth = thickness;
-      this.ctx.lineCap = 'round';
-      this.ctx.lineJoin = 'round';
-      
-      // Add subtle glow
-      this.ctx.shadowColor = this.gameState.shieldTimer > 0 ? 'cyan' : `hsl(${baseHue},100%,60%)`;
-      this.ctx.shadowBlur = this.gameState.shieldTimer > 0 ? 30 : this.gameState.boosting ? 20 : 10;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(current.x, current.y);
-      this.ctx.lineTo(next.x, next.y);
-      this.ctx.stroke();
-      
-      // Draw darker bottom shadow for depth
-      this.ctx.shadowBlur = 0;
-      this.ctx.strokeStyle = `hsl(${baseHue},100%,15%)`;
-      this.ctx.lineWidth = thickness * 0.3;
-      this.ctx.globalAlpha = 0.4;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(
-        current.x + Math.cos(perpAngle) * (thickness * 0.25),
-        current.y + Math.sin(perpAngle) * (thickness * 0.25)
-      );
-      this.ctx.lineTo(
-        next.x + Math.cos(perpAngle) * (thickness * 0.25),
-        next.y + Math.sin(perpAngle) * (thickness * 0.25)
-      );
-      this.ctx.stroke();
-      
-      this.ctx.globalAlpha = 1;
+      if (this.gameState.snake.length < 150) {
+        // Full 3D rendering for shorter snakes
+        this.drawFullSegment3D(current, next, thickness, perpAngle, segmentHue, shadowColor, shadowBlur);
+      } else {
+        // Simplified rendering for long snakes
+        this.drawSimpleSegment3D(current, next, thickness, segmentHue, shadowColor, shadowBlur);
+      }
     }
     
     this.ctx.shadowBlur = 0;
+  }
+
+  isSegmentVisible(current, next, thickness) {
+    const padding = thickness;
+    const camera = this.gameState.camera;
+    const canvas = this.canvas;
+    
+    // Check if segment is within screen bounds (with padding)
+    const minX = Math.min(current.x, next.x) - padding;
+    const maxX = Math.max(current.x, next.x) + padding;
+    const minY = Math.min(current.y, next.y) - padding;
+    const maxY = Math.max(current.y, next.y) + padding;
+    
+    return !(maxX < camera.x || minX > camera.x + canvas.width ||
+             maxY < camera.y || minY > camera.y + canvas.height);
+  }
+
+  drawFullSegment3D(current, next, thickness, perpAngle, segmentHue, shadowColor, shadowBlur) {
+    // Full 3D gradient calculation
+    const topOffset = thickness * 0.4;
+    const topGrad = this.ctx.createLinearGradient(
+      current.x - Math.cos(perpAngle) * topOffset,
+      current.y - Math.sin(perpAngle) * topOffset,
+      current.x + Math.cos(perpAngle) * topOffset,
+      current.y + Math.sin(perpAngle) * topOffset
+    );
+    
+    topGrad.addColorStop(0, `hsl(${segmentHue},85%,75%)`);
+    topGrad.addColorStop(0.3, `hsl(${segmentHue},90%,65%)`);
+    topGrad.addColorStop(0.7, `hsl(${segmentHue},95%,45%)`);
+    topGrad.addColorStop(1, `hsl(${segmentHue},100%,25%)`);
+    
+    // Draw main body
+    this.ctx.strokeStyle = topGrad;
+    this.ctx.lineWidth = thickness;
+    this.ctx.lineCap = 'round';
+    this.ctx.shadowColor = shadowColor;
+    this.ctx.shadowBlur = shadowBlur;
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(current.x, current.y);
+    this.ctx.lineTo(next.x, next.y);
+    this.ctx.stroke();
+    
+    // Bottom shadow
+    this.ctx.shadowBlur = 0;
+    this.ctx.strokeStyle = `hsl(${segmentHue},100%,15%)`;
+    this.ctx.lineWidth = thickness * 0.3;
+    this.ctx.globalAlpha = 0.4;
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(
+      current.x + Math.cos(perpAngle) * (thickness * 0.25),
+      current.y + Math.sin(perpAngle) * (thickness * 0.25)
+    );
+    this.ctx.lineTo(
+      next.x + Math.cos(perpAngle) * (thickness * 0.25),
+      next.y + Math.sin(perpAngle) * (thickness * 0.25)
+    );
+    this.ctx.stroke();
+    this.ctx.globalAlpha = 1;
+  }
+
+  drawSimpleSegment3D(current, next, thickness, segmentHue, shadowColor, shadowBlur) {
+    // Simplified single-color rendering with basic shadow
+    this.ctx.strokeStyle = `hsl(${segmentHue},90%,55%)`;
+    this.ctx.lineWidth = thickness;
+    this.ctx.lineCap = 'round';
+    this.ctx.shadowColor = shadowColor;
+    this.ctx.shadowBlur = Math.max(5, shadowBlur * 0.5); // Reduced shadow blur
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(current.x, current.y);
+    this.ctx.lineTo(next.x, next.y);
+    this.ctx.stroke();
   }
 
   drawSnakeHead() {
