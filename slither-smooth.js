@@ -326,16 +326,29 @@ function gameLoop() {
       }
     });
 
-    aiSnakes.forEach(ai => {
-      ai.angle += (Math.random() - 0.5) * 0.1;
+    aiSnakes.forEach((ai, index) => {
       let head = ai.body[0];
+      let playerHead = snake[0];
+
+      // angle toward player snake
+      let angleToPlayer = Math.atan2(playerHead.y - head.y, playerHead.x - head.x);
+
+      // mix angle: some randomness so they look alive
+      ai.angle += (angleToPlayer - ai.angle) * 0.05 + (Math.random() - 0.5) * 0.05;
+
       let newHead = {
         x: head.x + Math.cos(ai.angle) * ai.speed,
         y: head.y + Math.sin(ai.angle) * ai.speed
       };
+
+      // keep AI snakes inside canvas (optional)
+      newHead.x = Math.max(20, Math.min(canvas.width - 20, newHead.x));
+      newHead.y = Math.max(20, Math.min(canvas.height - 20, newHead.y));
+
       ai.body.unshift(newHead);
       while (ai.body.length > 20) ai.body.pop();
 
+      // draw AI snake
       ctx.strokeStyle = `hsl(${ai.colorHue},100%,50%)`;
       ctx.lineWidth = snakeThickness * 0.7;
       ctx.beginPath();
@@ -344,6 +357,24 @@ function gameLoop() {
         ctx.lineTo(ai.body[i].x, ai.body[i].y);
       }
       ctx.stroke();
+    });
+
+    aiSnakes.forEach((ai, index) => {
+      for (let i = 0; i < ai.body.length; i++) {
+        let seg = ai.body[i];
+        let dist = Math.hypot(snake[0].x - seg.x, snake[0].y - seg.y);
+        if (dist < snakeThickness / 2) {
+          // eat!
+          score += 10;
+          scoreBoard.textContent = "Score: " + score;
+          snakeLength += 10;
+          eatSound.play();
+          spawnParticles(seg.x, seg.y, 30, "255,215,0");
+          aiSnakes.splice(index, 1); // remove eaten AI snake
+          spawnAISnakes(1);         // spawn new one to keep game alive
+          break;
+        }
+      }
     });
 
 
