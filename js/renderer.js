@@ -64,43 +64,92 @@ export class Renderer {
     this.ctx.save();
     this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     
-    this.ctx.lineJoin = 'round';
-    this.ctx.lineCap = 'round';
-
-    const grad = this.ctx.createLinearGradient(
-      this.gameState.snake[0].x, this.gameState.snake[0].y,
-      this.gameState.snake[this.gameState.snake.length - 1].x,
-      this.gameState.snake[this.gameState.snake.length - 1].y
-    );
-    grad.addColorStop(0, `hsl(${(this.gameState.hue) % 360},100%,60%)`);
-    grad.addColorStop(1, `hsl(${(this.gameState.hue + 100) % 360},100%,40%)`);
-
-    this.ctx.strokeStyle = grad;
-    this.ctx.lineWidth = this.gameState.getScaledThickness();
-    this.ctx.shadowColor = this.gameState.shieldTimer > 0 ? 'cyan' : `hsl(${(this.gameState.hue) % 360},100%,60%)`;
-    this.ctx.shadowBlur = this.gameState.shieldTimer > 0 ? 40 : this.gameState.boosting ? 25 : 15;
-
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.gameState.snake[0].x, this.gameState.snake[0].y);
-    for (let i = 1; i < this.gameState.snake.length; i++) {
-      this.ctx.lineTo(this.gameState.snake[i].x, this.gameState.snake[i].y);
-    }
-    this.ctx.stroke();
-    this.ctx.shadowBlur = 0;
-
+    this.draw3DSnakeSegments();
     this.drawSnakeHead();
     this.ctx.restore();
   }
 
+  draw3DSnakeSegments() {
+    const thickness = this.gameState.getScaledThickness();
+    
+    // Draw each segment as a 3D cylinder
+    for (let i = 0; i < this.gameState.snake.length - 1; i++) {
+      const current = this.gameState.snake[i];
+      const next = this.gameState.snake[i + 1];
+      
+      // Calculate segment angle
+      const angle = Math.atan2(next.y - current.y, next.x - current.x);
+      const perpAngle = angle + Math.PI / 2;
+      
+      // Calculate 3D effect offsets
+      const topOffset = thickness * 0.4;
+      const bottomOffset = thickness * 0.5;
+      
+      // Top highlight (light source from top-left)
+      const topGrad = this.ctx.createLinearGradient(
+        current.x - Math.cos(perpAngle) * topOffset,
+        current.y - Math.sin(perpAngle) * topOffset,
+        current.x + Math.cos(perpAngle) * topOffset,
+        current.y + Math.sin(perpAngle) * topOffset
+      );
+      
+      const baseHue = (this.gameState.hue + i * 2) % 360;
+      topGrad.addColorStop(0, `hsl(${baseHue},85%,75%)`); // Bright highlight
+      topGrad.addColorStop(0.3, `hsl(${baseHue},90%,65%)`); // Main color
+      topGrad.addColorStop(0.7, `hsl(${baseHue},95%,45%)`); // Mid tone
+      topGrad.addColorStop(1, `hsl(${baseHue},100%,25%)`); // Dark shadow
+      
+      // Draw main body with 3D gradient
+      this.ctx.strokeStyle = topGrad;
+      this.ctx.lineWidth = thickness;
+      this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
+      
+      // Add subtle glow
+      this.ctx.shadowColor = this.gameState.shieldTimer > 0 ? 'cyan' : `hsl(${baseHue},100%,60%)`;
+      this.ctx.shadowBlur = this.gameState.shieldTimer > 0 ? 30 : this.gameState.boosting ? 20 : 10;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(current.x, current.y);
+      this.ctx.lineTo(next.x, next.y);
+      this.ctx.stroke();
+      
+      // Draw darker bottom shadow for depth
+      this.ctx.shadowBlur = 0;
+      this.ctx.strokeStyle = `hsl(${baseHue},100%,15%)`;
+      this.ctx.lineWidth = thickness * 0.3;
+      this.ctx.globalAlpha = 0.4;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(
+        current.x + Math.cos(perpAngle) * (thickness * 0.25),
+        current.y + Math.sin(perpAngle) * (thickness * 0.25)
+      );
+      this.ctx.lineTo(
+        next.x + Math.cos(perpAngle) * (thickness * 0.25),
+        next.y + Math.sin(perpAngle) * (thickness * 0.25)
+      );
+      this.ctx.stroke();
+      
+      this.ctx.globalAlpha = 1;
+    }
+    
+    this.ctx.shadowBlur = 0;
+  }
+
   drawSnakeHead() {
     const head = this.gameState.snake[0];
+    const thickness = this.gameState.getScaledThickness();
+    
+    // Draw 3D head sphere
+    this.draw3DHead(head, thickness);
 
     if (this.gameState.mouthTimer > 0) {
       this.ctx.fillStyle = 'black';
       this.ctx.beginPath();
       this.ctx.arc(
-        head.x + Math.cos(this.gameState.currentAngle) * this.gameState.getScaledThickness() / 1.8,
-        head.y + Math.sin(this.gameState.currentAngle) * this.gameState.getScaledThickness() / 1.8,
+        head.x + Math.cos(this.gameState.currentAngle) * thickness / 1.8,
+        head.y + Math.sin(this.gameState.currentAngle) * thickness / 1.8,
         4, 0, Math.PI * 2
       );
       this.ctx.fill();
@@ -108,6 +157,42 @@ export class Renderer {
 
     this.drawTongue(head);
     this.drawEyes(head);
+  }
+
+  draw3DHead(head, thickness) {
+    const radius = thickness * 0.7;
+    
+    // Create radial gradient for 3D sphere effect
+    const headGradient = this.ctx.createRadialGradient(
+      head.x - radius * 0.3, head.y - radius * 0.3, 0, // Light source offset
+      head.x, head.y, radius
+    );
+    
+    const baseHue = this.gameState.hue % 360;
+    headGradient.addColorStop(0, `hsl(${baseHue},85%,85%)`); // Bright highlight
+    headGradient.addColorStop(0.3, `hsl(${baseHue},90%,70%)`); // Main color
+    headGradient.addColorStop(0.7, `hsl(${baseHue},95%,50%)`); // Mid tone
+    headGradient.addColorStop(1, `hsl(${baseHue},100%,25%)`); // Dark edge
+    
+    // Draw main head sphere
+    this.ctx.fillStyle = headGradient;
+    this.ctx.shadowColor = this.gameState.shieldTimer > 0 ? 'cyan' : `hsl(${baseHue},100%,60%)`;
+    this.ctx.shadowBlur = this.gameState.shieldTimer > 0 ? 25 : this.gameState.boosting ? 15 : 8;
+    
+    this.ctx.beginPath();
+    this.ctx.arc(head.x, head.y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    // Add subtle bottom shadow for more depth
+    this.ctx.shadowBlur = 0;
+    this.ctx.fillStyle = `hsl(${baseHue},100%,15%)`;
+    this.ctx.globalAlpha = 0.3;
+    
+    this.ctx.beginPath();
+    this.ctx.arc(head.x + radius * 0.1, head.y + radius * 0.3, radius * 0.8, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    this.ctx.globalAlpha = 1;
   }
 
   drawTongue(head) {
@@ -196,31 +281,68 @@ export class Renderer {
     this.ctx.save();
     this.ctx.translate(-this.gameState.camera.x, -this.gameState.camera.y);
     this.gameState.aiSnakes.forEach(ai => {
-      // Draw snake body with more menacing appearance
-      const bodyGrad = this.ctx.createLinearGradient(
-        ai.body[0].x, ai.body[0].y,
-        ai.body[ai.body.length - 1].x, ai.body[ai.body.length - 1].y
-      );
-      bodyGrad.addColorStop(0, `hsl(${ai.colorHue},100%,60%)`);
-      bodyGrad.addColorStop(1, `hsl(${ai.colorHue},100%,30%)`);
-      
-      this.ctx.strokeStyle = bodyGrad;
-      this.ctx.lineWidth = this.gameState.getScaledThickness() * 0.7;
-      this.ctx.shadowColor = `hsl(${ai.colorHue},100%,50%)`;
-      this.ctx.shadowBlur = 10;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(ai.body[0].x, ai.body[0].y);
-      for (let i = 1; i < ai.body.length; i++) {
-        this.ctx.lineTo(ai.body[i].x, ai.body[i].y);
-      }
-      this.ctx.stroke();
-      this.ctx.shadowBlur = 0;
-      
-      // Draw eyes
+      this.draw3DAISnake(ai);
       this.drawAISnakeHead(ai);
     });
     this.ctx.restore();
+  }
+
+  draw3DAISnake(ai) {
+    const thickness = this.gameState.getScaledThickness() * 0.7;
+    
+    // Draw each AI snake segment with 3D effect
+    for (let i = 0; i < ai.body.length - 1; i++) {
+      const current = ai.body[i];
+      const next = ai.body[i + 1];
+      
+      // Calculate segment angle
+      const angle = Math.atan2(next.y - current.y, next.x - current.x);
+      const perpAngle = angle + Math.PI / 2;
+      
+      // Create 3D gradient for AI snake
+      const aiGrad = this.ctx.createLinearGradient(
+        current.x - Math.cos(perpAngle) * thickness * 0.4,
+        current.y - Math.sin(perpAngle) * thickness * 0.4,
+        current.x + Math.cos(perpAngle) * thickness * 0.4,
+        current.y + Math.sin(perpAngle) * thickness * 0.4
+      );
+      
+      aiGrad.addColorStop(0, `hsl(${ai.colorHue},85%,70%)`); // Highlight
+      aiGrad.addColorStop(0.3, `hsl(${ai.colorHue},90%,55%)`); // Main color
+      aiGrad.addColorStop(0.7, `hsl(${ai.colorHue},95%,35%)`); // Mid tone
+      aiGrad.addColorStop(1, `hsl(${ai.colorHue},100%,20%)`); // Shadow
+      
+      // Draw main body
+      this.ctx.strokeStyle = aiGrad;
+      this.ctx.lineWidth = thickness;
+      this.ctx.lineCap = 'round';
+      this.ctx.shadowColor = `hsl(${ai.colorHue},100%,50%)`;
+      this.ctx.shadowBlur = 8;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(current.x, current.y);
+      this.ctx.lineTo(next.x, next.y);
+      this.ctx.stroke();
+      
+      // Draw bottom shadow
+      this.ctx.shadowBlur = 0;
+      this.ctx.strokeStyle = `hsl(${ai.colorHue},100%,15%)`;
+      this.ctx.lineWidth = thickness * 0.3;
+      this.ctx.globalAlpha = 0.4;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(
+        current.x + Math.cos(perpAngle) * (thickness * 0.2),
+        current.y + Math.sin(perpAngle) * (thickness * 0.2)
+      );
+      this.ctx.lineTo(
+        next.x + Math.cos(perpAngle) * (thickness * 0.2),
+        next.y + Math.sin(perpAngle) * (thickness * 0.2)
+      );
+      this.ctx.stroke();
+      
+      this.ctx.globalAlpha = 1;
+    }
   }
 
   drawAISnakeHead(ai) {
